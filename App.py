@@ -39,6 +39,9 @@ if "couches" not in st.session_state:
 if "seats" not in st.session_state:
     st.session_state.seats = 30
 
+if "reservations" not in st.session_state:
+    st.session_state.reservations = {"Couch": [], "Seat": []}
+
 # Reservation form
 choice = st.selectbox("What would you like to reserve?", ["Couch", "Seat"])
 name = st.text_input("Your Name")
@@ -48,12 +51,27 @@ if st.button("Reserve"):
         st.error("Please enter your name.")
     elif choice == "Couch" and st.session_state.couches > 0:
         st.session_state.couches -= 1
+        st.session_state.reservations["Couch"].append(name)
         st.success(f"Couch reserved for {name}. Total cost: 2 euros extra.")
     elif choice == "Seat" and st.session_state.seats > 0:
         st.session_state.seats -= 1
+        st.session_state.reservations["Seat"].append(name)
         st.success(f"Seat reserved for {name}. Total cost: 2 euros extra.")
     else:
         st.error("No available reservations left for selected type.")
+
+# Display reservation summary
+st.subheader("Reserved Seats and Couches")
+
+if len(st.session_state.reservations["Couch"]) > 0:
+    st.write("### Couches Reserved:")
+    for person in st.session_state.reservations["Couch"]:
+        st.write(f"- {person}")
+
+if len(st.session_state.reservations["Seat"]) > 0:
+    st.write("### Seats Reserved:")
+    for person in st.session_state.reservations["Seat"]:
+        st.write(f"- {person}")
 
 # Info box color based on availability
 if st.session_state.couches == 0 and st.session_state.seats == 0:
@@ -63,14 +81,15 @@ else:
 
 st.markdown(f'<div class="{box_class}">Reservation costs an additional 2 euros.</div>', unsafe_allow_html=True)
 
-# Secret admin panel to change seat and couch availability
+# Secret admin panel to change seat and couch availability (hidden by default)
 code = st.text_input("Enter secret code (admin only)", type="password")
 if code == "gogolis":
+    st.subheader("Admin Panel: Update Availability")
+
     new_couches = st.number_input("Set total number of couches", min_value=0, value=st.session_state.couches, key="admin_couches")
     new_seats = st.number_input("Set total number of seats", min_value=0, value=st.session_state.seats, key="admin_seats")
+    
     if st.button("Update Availability"):
         st.session_state.couches = new_couches
         st.session_state.seats = new_seats
         st.success("Availability updated.")
-
-
