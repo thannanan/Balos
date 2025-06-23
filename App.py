@@ -81,14 +81,25 @@ else:
 
 st.markdown(f'<div class="{box_class}">Reservation costs an additional 2 euros.</div>', unsafe_allow_html=True)
 
-# Secret admin panel to change seat and couch availability (hidden by default)
-code = st.text_input("Enter secret code (admin only)", type="password")
-if code == "gogolis":
-    st.subheader("Admin Panel: Update Availability")
+# --- Hidden Admin Section ---
+code = st.text_input("Enter secret code (admin only)", type="password", label_visibility="collapsed", placeholder="Enter admin code")
 
+if code == "gogolis":
+    st.header("🔐 Admin Panel")
+
+    # Show all reservations by type
+    st.write("### 🧾 Reservation List")
+
+    for category in ["Couch", "Seat"]:
+        st.write(f"**{category}s ({len(st.session_state.reservations[category])}):**")
+        for i, person in enumerate(st.session_state.reservations[category], start=1):
+            st.write(f"{i}. {person}")
+
+    # Update availability
+    st.write("### 🛠️ Update Availability")
     new_couches = st.number_input("Set total number of couches", min_value=0, value=st.session_state.couches, key="admin_couches")
     new_seats = st.number_input("Set total number of seats", min_value=0, value=st.session_state.seats, key="admin_seats")
-    
+
     if st.button("Update Availability"):
         st.session_state.couches = new_couches
         st.session_state.seats = new_seats
