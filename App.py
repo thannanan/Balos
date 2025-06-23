@@ -42,6 +42,8 @@ if "seats" not in st.session_state:
     st.session_state.seats = 30
 if "reservations" not in st.session_state:
     st.session_state.reservations = {"Couch": [], "Seat": []}  # List of dicts: {"name": ..., "code": ...}
+if "banned" not in st.session_state:
+    st.session_state.banned = set()
 
 # Reservation form
 st.subheader("Make a Reservation")
@@ -51,6 +53,8 @@ name = st.text_input("Your Name")
 if st.button("Reserve"):
     if not name.strip():
         st.error("Please enter your name.")
+    elif name.strip().lower() in (n.lower() for n in st.session_state.banned):
+        st.error("You are banned from making reservations.")
     else:
         unique_code = f"{random.randint(100, 999)}"
 
@@ -118,6 +122,13 @@ if code == "gogolis":
         for i, res in enumerate(st.session_state.reservations[category], start=1):
             st.write(f"{i}. {res['name']} (code: {res['code']})")
 
+    st.write("### 🚫 Banned Users")
+    if st.session_state.banned:
+        for i, banned_name in enumerate(st.session_state.banned, start=1):
+            st.write(f"{i}. {banned_name}")
+    else:
+        st.write("No banned users.")
+
     st.write("### 🛠️ Update Availability")
     new_couches = st.number_input("Set total number of couches", min_value=0, value=st.session_state.couches, key="admin_couches")
     new_seats = st.number_input("Set total number of seats", min_value=0, value=st.session_state.seats, key="admin_seats")
@@ -126,3 +137,21 @@ if code == "gogolis":
         st.session_state.couches = new_couches
         st.session_state.seats = new_seats
         st.success("Availability updated.")
+
+    st.write("### 🚫 Ban a User from Reserving")
+    ban_name = st.text_input("Enter full name to ban")
+    if st.button("Ban User"):
+        if ban_name.strip():
+            st.session_state.banned.add(ban_name.strip())
+            st.success(f"User '{ban_name.strip()}' has been banned from making reservations.")
+        else:
+            st.error("Please enter a valid name to ban.")
+
+    st.write("### ✔️ Unban a User")
+    unban_name = st.text_input("Enter full name to unban", key="unban_name")
+    if st.button("Unban User"):
+        if unban_name.strip() in st.session_state.banned:
+            st.session_state.banned.remove(unban_name.strip())
+            st.success(f"User '{unban_name.strip()}' has been unbanned.")
+        else:
+            st.error("User not found in banned list.")
